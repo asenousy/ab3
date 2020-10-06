@@ -1,0 +1,8 @@
+web:
+    image: ab-nginx
+    ports:
+        - "8080:80"
+    links:
+        - php
+php:
+    image: ab-php
