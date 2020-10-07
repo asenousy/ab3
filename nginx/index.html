@@ -107,7 +107,8 @@
             </div>
             `;
             basketList.appendChild(basketItem);
-            total.innerHTML = (+total.innerHTML + selection.price).toFixed(2);
+            console.log('price = ', typeof selection.price)
+            total.innerHTML = (+total.innerHTML + +selection.price).toFixed(2);
         }
 
         fetch('/get-products.php')
