@@ -12,16 +12,16 @@ export class InfrastructureStack extends cdk.Stack {
     const cluster = new ecs.Cluster(this, "MyCluster", { vpc });
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, "TaskDef");
-    taskDefinition
-      .addContainer("ab-nginx", {
-        image: ecs.ContainerImage.fromAsset(__dirname + "/../../nginx"),
-      })
-      .addPortMappings({
-        containerPort: 80,
-      });
-    taskDefinition.addContainer("ab-php", {
+
+    const nginxContainer = taskDefinition.addContainer("ab-nginx", {
+      image: ecs.ContainerImage.fromAsset(__dirname + "/../../nginx"),
+    });
+    nginxContainer.addPortMappings({ containerPort: 80 });
+
+    const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
     });
+    phpContainer.addPortMappings({ containerPort: 9000 });
 
     // Create a load-balanced Fargate service and make it public
     var fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
