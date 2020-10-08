@@ -2,6 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
+import * as rds from "@aws-cdk/aws-rds";
 
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -24,7 +25,7 @@ export class InfrastructureStack extends cdk.Stack {
     phpContainer.addPortMappings({ containerPort: 9000 });
 
     // Create a load-balanced Fargate service and make it public
-    var fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
+    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
       this,
       "MyFargateService",
       {
@@ -37,6 +38,14 @@ export class InfrastructureStack extends cdk.Stack {
       }
     );
 
-    // The code that defines your stack goes here
+    // const db = new rds.DatabaseCluster(this, "Database", {
+    //   engine: rds.DatabaseClusterEngine.AURORA,
+    //   instanceProps: {
+    //     vpcSubnets: {
+    //       subnetType: ec2.SubnetType.PRIVATE,
+    //     },
+    //     vpc,
+    //   },
+    // });
   }
 }
