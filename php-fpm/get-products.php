@@ -1,10 +1,10 @@
 <?php
     header("Content-Type:application/json");
     
-    $servername = "database-1.cluster-csk7fswcg8ps.eu-west-2.rds.amazonaws.com";
-    $username = "admin";
-    $password = "awesomebuilder";
-    $dbName = "ab3";
+    $servername = getenv("DB_HOST");
+    $username = getenv("DB_USER");
+    $password = getenv("DB_PW");
+    $dbName = getenv("DB_NAME");
     
     try {
       $conn = new PDO("mysql:host=$servername;dbname=$dbName", $username, $password);

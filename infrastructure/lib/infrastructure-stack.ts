@@ -10,6 +10,28 @@ export class InfrastructureStack extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 2 });
 
+    const credentials = rds.Credentials.fromUsername("admin", {
+      password: new cdk.SecretValue("awesomebuilder"),
+    });
+
+    ////////// DB ////////////
+
+    const db = new rds.DatabaseCluster(this, "MyDatabase", {
+      engine: rds.DatabaseClusterEngine.auroraMysql({
+        version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
+      }),
+      defaultDatabaseName: "ab3",
+      credentials,
+      instanceProps: {
+        vpcSubnets: {
+          subnetType: ec2.SubnetType.PRIVATE,
+        },
+        vpc,
+      },
+    });
+
+    ////////// ECS ////////////
+
     const cluster = new ecs.Cluster(this, "MyCluster", { vpc });
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, "TaskDef");
@@ -21,6 +43,16 @@ export class InfrastructureStack extends cdk.Stack {
 
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
+      // secrets: {
+      //   DB_USER: ecs.Secret.fromSecretsManager(credentials),
+      //   DB_PW: ecs.Secret.fromSecretsManager(credentials),
+      // },
+      environment: {
+        DB_HOST: db.clusterEndpoint.hostname,
+        DB_NAME: "ab3",
+        DB_USER: "admin",
+        DB_PW: "awesomebuilder",
+      },
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
 
@@ -37,15 +69,5 @@ export class InfrastructureStack extends cdk.Stack {
         publicLoadBalancer: true, // Default is false
       }
     );
-
-    // const db = new rds.DatabaseCluster(this, "Database", {
-    //   engine: rds.DatabaseClusterEngine.AURORA,
-    //   instanceProps: {
-    //     vpcSubnets: {
-    //       subnetType: ec2.SubnetType.PRIVATE,
-    //     },
-    //     vpc,
-    //   },
-    // });
   }
 }
