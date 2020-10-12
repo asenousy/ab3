@@ -3,6 +3,7 @@ import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
 import * as rds from "@aws-cdk/aws-rds";
+import { Secret } from "@aws-cdk/aws-secretsmanager";
 
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -10,11 +11,22 @@ export class InfrastructureStack extends cdk.Stack {
 
     const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 2 });
 
-    const credentials = rds.Credentials.fromUsername("admin", {
-      password: new cdk.SecretValue("awesomebuilder"),
-    });
+    ////////// SECRETSMANAGER //////////
+
+    const secret = Secret.fromSecretArn(
+      this,
+      "MyDBSecret",
+      `arn:aws:secretsmanager:eu-west-2:053319678981:secret:MyDBSecret-uUf8jc`
+    );
+
+    const dbUsername = secret.secretValueFromJson("DB_USER").toString();
+    const dbPassword = secret.secretValueFromJson("DB_PW").toString();
 
     ////////// DB ////////////
+
+    const credentials = rds.Credentials.fromUsername(dbUsername, {
+      password: new cdk.SecretValue(dbPassword),
+    });
 
     const db = new rds.DatabaseCluster(this, "MyDatabase", {
       engine: rds.DatabaseClusterEngine.auroraMysql({
@@ -43,15 +55,11 @@ export class InfrastructureStack extends cdk.Stack {
 
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
-      // secrets: {
-      //   DB_USER: ecs.Secret.fromSecretsManager(credentials),
-      //   DB_PW: ecs.Secret.fromSecretsManager(credentials),
-      // },
       environment: {
         DB_HOST: db.clusterEndpoint.hostname,
         DB_NAME: "ab3",
-        DB_USER: "admin",
-        DB_PW: "awesomebuilder",
+        DB_USER: dbUsername,
+        DB_PW: dbPassword,
       },
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
