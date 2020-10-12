@@ -26,6 +26,7 @@
     "@aws-cdk/aws-ecs-patterns": "^1.67.0",
     "@aws-cdk/aws-rds": "^1.67.0",
     "@aws-cdk/core": "^1.67.0",
+    "@aws-solutions-constructs/aws-cloudfront-s3": "^1.67.0",
     "source-map-support": "^0.5.16"
   }
 }
