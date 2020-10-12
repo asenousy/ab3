@@ -4,12 +4,17 @@ import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
 import * as rds from "@aws-cdk/aws-rds";
 import { Secret } from "@aws-cdk/aws-secretsmanager";
+import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 2 });
+
+    ////////// CLOUDFRONT //////////////
+
+    new CloudFrontToS3(this, "my-cloudfront-s3", {});
 
     ////////// SECRETSMANAGER //////////
 
