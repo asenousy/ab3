@@ -55,6 +55,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const nginxContainer = taskDefinition.addContainer("ab-nginx", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../nginx"),
+      logging: ecs.LogDriver.awsLogs({ streamPrefix: "myNGINX" }),
     });
     nginxContainer.addPortMappings({ containerPort: 80 });
 
@@ -66,6 +67,7 @@ export class InfrastructureStack extends cdk.Stack {
         DB_USER: dbUsername,
         DB_PW: dbPassword,
       },
+      logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
 
