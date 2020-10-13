@@ -70,9 +70,13 @@
 
 <body>
     <nav class="navbar navbar-light bg-light">
-        <a class="navbar-brand" href="#">
-            Tools Shop
-        </a>
+        <?php
+            $url = getenv("ECS_CONTAINER_METADATA_URI_V4");
+            $json = file_get_contents($url);
+            $data = json_decode($json, true);
+            $ip = $data['Networks'][0]['IPv4Addresses'][0];
+            echo "<h5> Hello from ${ip} </h5>";
+        ?>
     </nav>
     <main>
         <div id="list">
@@ -107,7 +111,6 @@
             </div>
             `;
             basketList.appendChild(basketItem);
-            console.log('price = ', typeof selection.price)
             total.innerHTML = (+total.innerHTML + +selection.price).toFixed(2);
         }
 
@@ -117,10 +120,10 @@
                 products = data;
                 productsList.innerHTML = data.map(product =>
                     `<div class="itemContainer">
-                <h5>${product.name}</h5>
+                <h4 style="text-align: center;">${product.name}</h4>
                 <div class="item">
-                    <img width="90px;" src="https://via.placeholder.com/150" >
-                    <p style="margin:10px;max-width:300px;">blah blah blah blah blah blah blah blah blah</p>
+                    <img width="90px;" src="${product.image}" >
+                    <p style="margin:10px;max-width:300px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</p>
                     <button type="button" class="btn btn-primary" onclick="addToBasket(${product.productId});">add to Basket</button>
                 </div>
              </div>`
