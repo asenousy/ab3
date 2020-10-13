@@ -104,7 +104,7 @@
             basketItem.innerHTML = `
             <div class="itemContainer">
                 <div class="item">
-                    <img class="space" width="50px;" src="https://via.placeholder.com/150" >
+                    <img class="space" width="50px;" src="${selection.image}" >
                     <div class="space">${selection.name}</div>
                     <div class="space">$${selection.price}</div>
                 </div>
