@@ -64,10 +64,8 @@ export class InfrastructureStack extends cdk.Stack {
       "MyFargateService",
       {
         cluster: cluster, // Required
-        cpu: 512, // Default is 256
         desiredCount: 4, // Default is 1
         taskDefinition,
-        memoryLimitMiB: 2048, // Default is 512
         publicLoadBalancer: true, // Default is false
       }
     );
