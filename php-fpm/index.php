@@ -66,6 +66,7 @@
             padding: 10px;
         }
     </style>
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 
 <body>
@@ -85,7 +86,7 @@
             <h5>Basket</h5>
             <div id="basket"></div>
             <h5>Total = $<span id="total">0</span></h5>
-            <button type="button" class="btn btn-primary">Checkout</button>
+            <button id="checkout-button" type="button" class="btn btn-primary">Checkout</button>
         </aside>
     </main>
 
@@ -93,10 +94,36 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
     <script>
+    
         const productsList = document.getElementById('list');
         const basketList = document.getElementById('basket');
         const total = document.getElementById('total');
         let products;
+        
+        var stripe = Stripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
+        var checkoutButton = document.getElementById("checkout-button");
+        checkoutButton.addEventListener("click", function () {
+          fetch("/create-session.php", {
+            method: "POST",
+          })
+            .then(function (response) {
+              return response.json();
+            })
+            .then(function (session) {
+              return stripe.redirectToCheckout({ sessionId: session.id });
+            })
+            .then(function (result) {
+              // If redirectToCheckout fails due to a browser or network
+              // error, you should display the localized error message to your
+              // customer using error.message.
+              if (result.error) {
+                alert(result.error.message);
+              }
+            })
+            .catch(function (error) {
+              console.error("Error:", error);
+            });
+        });
 
         function addToBasket(id) {
             const selection = products.find(product => product.productId == id);
