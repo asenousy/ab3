@@ -2,6 +2,7 @@
 require 'vendor/autoload.php';
 \Stripe\Stripe::setApiKey('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
 header('Content-Type: application/json');
+$YOUR_DOMAIN = 'http://localhost:9000';
 $checkout_session = \Stripe\Checkout\Session::create([
   'payment_method_types' => ['card'],
   'line_items' => [[
@@ -16,7 +17,7 @@ $checkout_session = \Stripe\Checkout\Session::create([
     'quantity' => 1,
   ]],
   'mode' => 'payment',
-  'success_url' => '/success.html',
-  'cancel_url' => '/cancel.html',
+  'success_url' => $YOUR_DOMAIN . '/success.php',
+  'cancel_url' => $YOUR_DOMAIN . '/cancel.php',
 ]);
 echo json_encode(['id' => $checkout_session->id]);
