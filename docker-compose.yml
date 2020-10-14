@@ -6,5 +6,3 @@ web:
         - php
 php:
     image: ab-php
-    environment:
-        - ECS=yahoo
