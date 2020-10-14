@@ -59,6 +59,19 @@ export class InfrastructureStack extends cdk.Stack {
     });
     nginxContainer.addPortMappings({ containerPort: 80 });
 
+    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
+      this,
+      "MyFargateService",
+      {
+        cluster: cluster, // Required
+        cpu: 512, // Default is 256
+        desiredCount: 4, // Default is 1
+        taskDefinition,
+        memoryLimitMiB: 2048, // Default is 512
+        publicLoadBalancer: true, // Default is false
+      }
+    );
+
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
       environment: {
@@ -66,23 +79,10 @@ export class InfrastructureStack extends cdk.Stack {
         DB_NAME: "ab3",
         DB_USER: dbUsername,
         DB_PW: dbPassword,
+        DOMAIN: "http://" + fargateService.loadBalancer.loadBalancerDnsName,
       },
       logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
-
-    // Create a load-balanced Fargate service and make it public
-    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
-      this,
-      "MyFargateService",
-      {
-        cluster: cluster, // Required
-        cpu: 512, // Default is 256
-        desiredCount: 6, // Default is 1
-        taskDefinition,
-        memoryLimitMiB: 2048, // Default is 512
-        publicLoadBalancer: true, // Default is false
-      }
-    );
   }
 }

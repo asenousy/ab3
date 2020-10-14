@@ -2,7 +2,7 @@
 require 'vendor/autoload.php';
 \Stripe\Stripe::setApiKey('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
 header('Content-Type: application/json');
-$YOUR_DOMAIN = 'http://localhost:9000';
+$YOUR_DOMAIN = getenv('DOMAIN');
 $checkout_session = \Stripe\Checkout\Session::create([
   'payment_method_types' => ['card'],
   'line_items' => [[
