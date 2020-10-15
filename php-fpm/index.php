@@ -99,11 +99,12 @@
         const basketList = document.getElementById('basket');
         const total = document.getElementById('total');
         let products;
+        const basket = [];
         
         var stripe = Stripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
         var checkoutButton = document.getElementById("checkout-button");
         checkoutButton.addEventListener("click", function () {
-          fetch("/create-session.php", {
+          fetch("/create-session.php?id=" + basket[0].productId, {
             method: "POST",
           })
             .then(function (response) {
@@ -113,9 +114,6 @@
               return stripe.redirectToCheckout({ sessionId: session.id });
             })
             .then(function (result) {
-              // If redirectToCheckout fails due to a browser or network
-              // error, you should display the localized error message to your
-              // customer using error.message.
               if (result.error) {
                 alert(result.error.message);
               }
@@ -139,6 +137,7 @@
             `;
             basketList.appendChild(basketItem);
             total.innerHTML = (+total.innerHTML + +selection.price).toFixed(2);
+            basket.push(selection);
         }
 
         fetch('/get-products.php')
