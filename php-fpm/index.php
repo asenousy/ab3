@@ -19,14 +19,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: cornflowerblue;
+            background-color: deepskyblue;
             border-radius: 20px;
             margin: 10px;
             padding: 10px;
         }
 
         aside {
-            background-color: cornflowerblue;
+            background-color: deepskyblue;
             border-radius: 20px;
             margin: 10px;
             padding: 10px;
@@ -56,6 +56,7 @@
 
         .itemContainer {
             border: 1px solid blue;
+            background-color: white;
             border-radius: 10px;
             margin: 10px;
             padding: 10px;
