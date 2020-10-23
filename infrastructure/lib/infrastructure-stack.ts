@@ -14,23 +14,23 @@ export class InfrastructureStack extends cdk.Stack {
 
     ////////// CLOUDFRONT //////////////
 
-    new CloudFrontToS3(this, "my-cloudfront-s3", {});
+    new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
 
     ////////// SECRETSMANAGER //////////
 
-    const secret = Secret.fromSecretArn(
-      this,
-      "MyDBSecret",
-      "arn:aws:secretsmanager:us-east-1:606442226756:secret:MyDBSecret-28jueP"
-    );
+    // const secret = Secret.fromSecretArn(
+    //   this,
+    //   "MyDBSecret",
+    //   "arn:aws:secretsmanager:us-east-1:606442226756:secret:MyDBSecret-28jueP"
+    // );
 
-    const dbUsername = secret.secretValueFromJson("DB_USER").toString();
-    const dbPassword = secret.secretValueFromJson("DB_PW").toString();
+    // const dbUsername = secret.secretValueFromJson("DB_USER").toString();
+    // const dbPassword = secret.secretValueFromJson("DB_PW").toString();
 
     ////////// DB ////////////
 
-    const credentials = rds.Credentials.fromUsername(dbUsername, {
-      password: new cdk.SecretValue(dbPassword),
+    const credentials = rds.Credentials.fromUsername('admin', {
+      password: new cdk.SecretValue('awesomebuilder') as any,
     });
 
     const db = new rds.DatabaseCluster(this, "MyDatabase", {
@@ -75,8 +75,8 @@ export class InfrastructureStack extends cdk.Stack {
       environment: {
         DB_HOST: db.clusterEndpoint.hostname,
         DB_NAME: "ab3",
-        DB_USER: dbUsername,
-        DB_PW: dbPassword,
+        DB_USER: 'admin',
+        DB_PW: 'awesomebuilder',
         DOMAIN: "http://" + fargateService.loadBalancer.loadBalancerDnsName,
       },
       logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
