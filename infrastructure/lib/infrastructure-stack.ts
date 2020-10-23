@@ -21,7 +21,7 @@ export class InfrastructureStack extends cdk.Stack {
     const secret = Secret.fromSecretArn(
       this,
       "MyDBSecret",
-      "arn:aws:secretsmanager:us-east-1:053319678981:secret:MyDBSecret-6u35MK"
+      "arn:aws:secretsmanager:us-east-1:606442226756:secret:MyDBSecret-28jueP"
     );
 
     const dbUsername = secret.secretValueFromJson("DB_USER").toString();
