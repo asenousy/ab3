@@ -4,6 +4,13 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from "@aws-cdk/aws-codepipeline-actions";
 import { InfrastructureStack } from './infrastructure-stack';
 
+class InfrastructureStage extends Stage {
+    constructor(scope: Construct, id: string, props?: StageProps) {
+        super(scope, id, props);
+        new InfrastructureStack(this, 'InfrastructureStack');
+    }
+}
+
 export class PipelineStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
@@ -32,7 +39,7 @@ export class PipelineStack extends Stack {
             }),
         });
 
-        pipeline.addApplicationStage(new InfrastructureStack(this, 'InfrastructureStack', {
+        pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage', {
             env: { account: '358886312461', region: 'us-east-1' }
         }) as any);
     }
