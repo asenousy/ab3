@@ -24,7 +24,7 @@ export class PipelineStack extends Stack {
             sourceAction: new codepipeline_actions.GitHubSourceAction({
                 actionName: 'GitHub',
                 output: sourceArtifact,
-                oauthToken: new SecretValue('e39b5622999a2d33285d5de89d541bb5968a9755'),
+                oauthToken: SecretValue.secretsManager('GITHUB_TOKEN'),
                 owner: 'asenousy',
                 repo: 'ab3',
                 branch: 'master',
