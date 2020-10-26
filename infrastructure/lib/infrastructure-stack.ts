@@ -63,7 +63,7 @@ export class InfrastructureStack extends cdk.Stack {
       this,
       "MyFargateService",
       {
-        cluster: cluster, // Required
+        cluster: cluster,
         desiredCount: 4, // Default is 1
         taskDefinition,
         publicLoadBalancer: true, // Default is false
