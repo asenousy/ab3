@@ -20,6 +20,7 @@ export class PipelineStack extends Stack {
 
         const pipeline = new CdkPipeline(this, 'Pipeline', {
             pipelineName: 'MyAppPipeline',
+            selfMutating: false,
             cloudAssemblyArtifact,
             sourceAction: new codepipeline_actions.GitHubSourceAction({
                 actionName: 'GitHub',
@@ -39,6 +40,8 @@ export class PipelineStack extends Stack {
             }),
         });
 
-        pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage'));
+        pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage', {
+            env: { account: '018872975943', region: 'us-east-1' }
+        }));
     }
 }
