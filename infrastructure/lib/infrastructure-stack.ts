@@ -16,17 +16,6 @@ export class InfrastructureStack extends cdk.Stack {
 
     new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
 
-    ////////// SECRETSMANAGER //////////
-
-    // const secret = Secret.fromSecretArn(
-    //   this,
-    //   "MyDBSecret",
-    //   "arn:aws:secretsmanager:us-east-1:606442226756:secret:MyDBSecret-28jueP"
-    // );
-
-    // const dbUsername = secret.secretValueFromJson("DB_USER").toString();
-    // const dbPassword = secret.secretValueFromJson("DB_PW").toString();
-
     ////////// DB ////////////
 
     const credentials = rds.Credentials.fromUsername('admin', {
