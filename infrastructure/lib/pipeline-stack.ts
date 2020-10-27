@@ -39,8 +39,6 @@ export class PipelineStack extends Stack {
             }),
         });
 
-        pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage', {
-            env: { account: '018872975943', region: 'us-east-1' }
-        }) as any);
+        pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage'));
     }
 }
