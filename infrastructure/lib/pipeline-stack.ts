@@ -52,7 +52,7 @@ export class PipelineStack extends Stack {
         deployStage.addManualApprovalAction({ actionName: 'Approve', runOrder: INDEX_START_DEPLOY_STAGE });
         deployStage.addActions(new ShellScriptAction({
             actionName: 'IntegrationTesting',
-            commands: ['curl -Ssf http://lsdkgjfalsigj.ldskfjs'],
+            commands: ['curl -Ssf $URL'],
             useOutputs: {
                 URL: pipeline.stackOutput(infrastructure.loadBalancerAddress),
             }
