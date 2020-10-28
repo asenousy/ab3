@@ -3,10 +3,11 @@ import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
 import * as rds from "@aws-cdk/aws-rds";
-import { Secret } from "@aws-cdk/aws-secretsmanager";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 
 export class InfrastructureStack extends cdk.Stack {
+  public readonly loadBalancer: any
+
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -58,6 +59,7 @@ export class InfrastructureStack extends cdk.Stack {
         publicLoadBalancer: true, // Default is false
       }
     );
+    this.loadBalancer = fargateService.loadBalancer;
 
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
