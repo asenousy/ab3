@@ -43,6 +43,8 @@ export class PipelineStack extends Stack {
         const deployStage = pipeline.addApplicationStage(new InfrastructureStage(this, 'InfrastructureStage', {
             env: { account: '325003598244', region: 'us-east-1' }
         }));
+        const INDEX_START_DEPLOY_STAGE = deployStage.nextSequentialRunOrder() - 2; // 2 = Prepare (changeSet creation) + Deploy (cfn deploy)
+        deployStage.addManualApprovalAction({ actionName: 'Approve', runOrder: INDEX_START_DEPLOY_STAGE });
         deployStage.addManualApprovalAction();
     }
 }
