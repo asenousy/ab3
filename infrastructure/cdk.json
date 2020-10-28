@@ -9,11 +9,6 @@
       "us-east-1a",
       "us-east-1b",
       "us-east-1c"
-    ],
-    "availability-zones:account=358886312461:region=us-east-1": [
-      "us-east-1a",
-      "us-east-1b",
-      "us-east-1c"
     ]
   }
 }
