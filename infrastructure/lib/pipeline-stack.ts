@@ -48,8 +48,6 @@ export class PipelineStack extends Stack {
             env: { account: '325003598244', region: 'us-east-1' }
         });
         const deployStage = pipeline.addApplicationStage(infrastructure, { manualApprovals: true });
-        // const INDEX_START_DEPLOY_STAGE = deployStage.nextSequentialRunOrder() - 2; // 2 = Prepare (changeSet creation) + Deploy (cfn deploy)
-        // deployStage.addManualApprovalAction({ actionName: 'Approve', runOrder: INDEX_START_DEPLOY_STAGE });
         deployStage.addActions(new ShellScriptAction({
             actionName: 'IntegrationTesting',
             commands: ['curl -Ssf $URL/info.php'],

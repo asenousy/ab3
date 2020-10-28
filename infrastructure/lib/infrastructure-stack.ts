@@ -11,7 +11,7 @@ export class InfrastructureStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 2 });
+    const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 1 });
 
     ////////// CLOUDFRONT //////////////
 
@@ -54,7 +54,7 @@ export class InfrastructureStack extends cdk.Stack {
       "MyFargateService",
       {
         cluster: cluster,
-        desiredCount: 2, // Default is 1
+        desiredCount: 1, // Default is 1
         taskDefinition,
         publicLoadBalancer: true, // Default is false
       }
