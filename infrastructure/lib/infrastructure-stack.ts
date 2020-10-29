@@ -15,27 +15,27 @@ export class InfrastructureStack extends cdk.Stack {
 
     ////////// CLOUDFRONT //////////////
 
-    // new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
+    new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
 
     ////////// DB ////////////
 
-    // const credentials = rds.Credentials.fromUsername('admin', {
-    //   password: new cdk.SecretValue('awesomebuilder') as any,
-    // });
+    const credentials = rds.Credentials.fromUsername('admin', {
+      password: new cdk.SecretValue('awesomebuilder') as any,
+    });
 
-    // const db = new rds.DatabaseCluster(this, "MyDatabase", {
-    //   engine: rds.DatabaseClusterEngine.auroraMysql({
-    //     version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
-    //   }),
-    //   defaultDatabaseName: "ab3",
-    //   credentials,
-    //   instanceProps: {
-    //     vpcSubnets: {
-    //       subnetType: ec2.SubnetType.PRIVATE,
-    //     },
-    //     vpc,
-    //   },
-    // });
+    const db = new rds.DatabaseCluster(this, "MyDatabase", {
+      engine: rds.DatabaseClusterEngine.auroraMysql({
+        version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
+      }),
+      defaultDatabaseName: "ab3",
+      credentials,
+      instanceProps: {
+        vpcSubnets: {
+          subnetType: ec2.SubnetType.PRIVATE,
+        },
+        vpc,
+      },
+    });
 
     ////////// ECS ////////////
 
@@ -64,8 +64,7 @@ export class InfrastructureStack extends cdk.Stack {
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
       environment: {
-        // DB_HOST: db.clusterEndpoint.hostname,
-        DB_HOST: '',
+        DB_HOST: db.clusterEndpoint.hostname,
         DB_NAME: "ab3",
         DB_USER: 'admin',
         DB_PW: 'awesomebuilder',
