@@ -91,15 +91,25 @@ export class InfrastructureStack extends cdk.Stack {
     const dashboard = new Dashboard(this, "MyDashboard");
     dashboard.addWidgets(
       new GraphWidget({
+        title: "incoming Requests",
+        width: 10,
         left: [fargateService.loadBalancer.metricRequestCount()],
       })
     );
     dashboard.addWidgets(
       new LogQueryWidget({
-        logGroupNames: [
-          NGINXLogDriver.logGroup?.logGroupName!,
-          PHPLogDriver.logGroup?.logGroupName!,
-        ],
+        title: "NGINX Logs",
+        width: 20,
+        logGroupNames: [NGINXLogDriver.logGroup?.logGroupName!],
+        view: LogQueryVisualizationType.TABLE,
+        queryLines: ["fields @timestamp, @message"],
+      })
+    );
+    dashboard.addWidgets(
+      new LogQueryWidget({
+        title: "PHP Logs",
+        width: 20,
+        logGroupNames: [PHPLogDriver.logGroup?.logGroupName!],
         view: LogQueryVisualizationType.TABLE,
         queryLines: ["fields @timestamp, @message"],
       })
