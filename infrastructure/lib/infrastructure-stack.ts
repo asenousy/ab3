@@ -7,12 +7,12 @@ import * as rds from "@aws-cdk/aws-rds";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 
 export class InfrastructureStack extends cdk.Stack {
-  public readonly loadBalancer: any
+  public readonly loadBalancer: any;
 
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 1 });
+    const vpc = new ec2.Vpc(this, "MyVpc", { maxAzs: 2 });
 
     ////////// CLOUDFRONT //////////////
 
@@ -55,7 +55,7 @@ export class InfrastructureStack extends cdk.Stack {
       "MyFargateService",
       {
         cluster: cluster,
-        desiredCount: 1, // Default is 1
+        desiredCount: 2, // Default is 1
         taskDefinition,
         publicLoadBalancer: true, // Default is false
       }
@@ -66,10 +66,10 @@ export class InfrastructureStack extends cdk.Stack {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
       environment: {
         // DB_HOST: db.clusterEndpoint.hostname,
-        DB_HOST: '',
+        DB_HOST: "",
         DB_NAME: "ab3",
-        DB_USER: 'admin',
-        DB_PW: 'awesomebuilder',
+        DB_USER: "admin",
+        DB_PW: "awesomebuilder",
         DOMAIN: "http://" + fargateService.loadBalancer.loadBalancerDnsName,
       },
       logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
@@ -78,7 +78,6 @@ export class InfrastructureStack extends cdk.Stack {
 
     /////////////////// DashBoard /////////////////////
 
-    const dashBoard = new Dashboard(this, 'MyDashboard');
+    const dashBoard = new Dashboard(this, "MyDashboard");
   }
-
 }
