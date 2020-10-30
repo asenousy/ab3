@@ -2,7 +2,12 @@ import * as cdk from "@aws-cdk/core";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
-import { Dashboard, GraphWidget } from "@aws-cdk/aws-cloudwatch";
+import {
+  Dashboard,
+  GraphWidget,
+  LogQueryVisualizationType,
+  LogQueryWidget,
+} from "@aws-cdk/aws-cloudwatch";
 import * as rds from "@aws-cdk/aws-rds";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 
@@ -42,11 +47,15 @@ export class InfrastructureStack extends cdk.Stack {
 
     const cluster = new ecs.Cluster(this, "MyCluster", { vpc });
 
+    const NGINXLogDriver = new ecs.AwsLogDriver({ streamPrefix: "myNGINX" });
+    const PHPLogDriver = new ecs.AwsLogDriver({ streamPrefix: "myPHP" });
+
     const taskDefinition = new ecs.FargateTaskDefinition(this, "TaskDef");
 
     const nginxContainer = taskDefinition.addContainer("ab-nginx", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../nginx"),
-      logging: ecs.LogDriver.awsLogs({ streamPrefix: "myNGINX" }),
+      // logging: new ecs.AwsLogDriver({ streamPrefix: "myNGINX" }),
+      logging: NGINXLogDriver,
     });
     nginxContainer.addPortMappings({ containerPort: 80 });
 
@@ -72,16 +81,27 @@ export class InfrastructureStack extends cdk.Stack {
         DB_PW: "awesomebuilder",
         DOMAIN: "http://" + fargateService.loadBalancer.loadBalancerDnsName,
       },
-      logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
+      // logging: new ecs.AwsLogDriver({ streamPrefix: "myPHP" }),
+      logging: PHPLogDriver,
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
 
     /////////////////// DashBoard /////////////////////
 
-    const dashBoard = new Dashboard(this, "MyDashboard");
-    dashBoard.addWidgets(
+    const dashboard = new Dashboard(this, "MyDashboard");
+    dashboard.addWidgets(
       new GraphWidget({
         left: [fargateService.loadBalancer.metricRequestCount()],
+      })
+    );
+    dashboard.addWidgets(
+      new LogQueryWidget({
+        logGroupNames: [
+          NGINXLogDriver.logGroup?.logGroupName!,
+          PHPLogDriver.logGroup?.logGroupName!,
+        ],
+        view: LogQueryVisualizationType.TABLE,
+        queryLines: ["fields @timestamp, @message"],
       })
     );
   }
