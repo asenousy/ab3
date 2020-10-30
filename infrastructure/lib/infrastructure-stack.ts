@@ -2,6 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
+import { Dashboard } from "@aws-cdk/aws-cloudwatch";
 import * as rds from "@aws-cdk/aws-rds";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 
@@ -15,27 +16,27 @@ export class InfrastructureStack extends cdk.Stack {
 
     ////////// CLOUDFRONT //////////////
 
-    new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
+    // new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
 
     ////////// DB ////////////
 
-    const credentials = rds.Credentials.fromUsername('admin', {
-      password: new cdk.SecretValue('awesomebuilder') as any,
-    });
+    // const credentials = rds.Credentials.fromUsername('admin', {
+    //   password: new cdk.SecretValue('awesomebuilder') as any,
+    // });
 
-    const db = new rds.DatabaseCluster(this, "MyDatabase", {
-      engine: rds.DatabaseClusterEngine.auroraMysql({
-        version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
-      }),
-      defaultDatabaseName: "ab3",
-      credentials,
-      instanceProps: {
-        vpcSubnets: {
-          subnetType: ec2.SubnetType.PRIVATE,
-        },
-        vpc,
-      },
-    });
+    // const db = new rds.DatabaseCluster(this, "MyDatabase", {
+    //   engine: rds.DatabaseClusterEngine.auroraMysql({
+    //     version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
+    //   }),
+    //   defaultDatabaseName: "ab3",
+    //   credentials,
+    //   instanceProps: {
+    //     vpcSubnets: {
+    //       subnetType: ec2.SubnetType.PRIVATE,
+    //     },
+    //     vpc,
+    //   },
+    // });
 
     ////////// ECS ////////////
 
@@ -64,7 +65,8 @@ export class InfrastructureStack extends cdk.Stack {
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ecs.ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
       environment: {
-        DB_HOST: db.clusterEndpoint.hostname,
+        // DB_HOST: db.clusterEndpoint.hostname,
+        DB_HOST: '',
         DB_NAME: "ab3",
         DB_USER: 'admin',
         DB_PW: 'awesomebuilder',
@@ -73,5 +75,10 @@ export class InfrastructureStack extends cdk.Stack {
       logging: ecs.LogDriver.awsLogs({ streamPrefix: "myPHP" }),
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
+
+    /////////////////// DashBoard /////////////////////
+
+    const dashBoard = new Dashboard(this, 'MyDashboard');
   }
+
 }
