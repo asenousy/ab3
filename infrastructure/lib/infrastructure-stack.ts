@@ -26,6 +26,7 @@ import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 import {
   AwsCustomResource,
   AwsCustomResourcePolicy,
+  PhysicalResourceId,
 } from "@aws-cdk/custom-resources";
 
 export class InfrastructureStack extends Stack {
@@ -85,6 +86,7 @@ export class InfrastructureStack extends Stack {
           sql:
             "CREATE TABLE products ( productId int, name varchar(255), image varchar(255), price decimal(5, 2) ); INSERT INTO products ( productId, name, image, price ) VALUES ( 1, 'hat', 'https://via.placeholder.com/150', 12.54);",
         },
+        physicalResourceId: PhysicalResourceId.fromResponse("RequestId"),
       },
       policy: AwsCustomResourcePolicy.fromSdkCalls({
         resources: AwsCustomResourcePolicy.ANY_RESOURCE,
