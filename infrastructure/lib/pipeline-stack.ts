@@ -53,7 +53,7 @@ export class PipelineStack extends Stack {
       synthAction: SimpleSynthAction.standardNpmSynth({
         sourceArtifact,
         cloudAssemblyArtifact,
-        subdirectory: "source/3-landing-page/cdk",
+        subdirectory: "infrastructure",
         installCommand: "npm install",
         buildCommand: "npm run build",
       }),
