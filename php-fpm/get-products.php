@@ -1,13 +1,15 @@
 <?php
-    header("Content-Type:application/json");
-    
-    $servername = getenv("DB_HOST");
-    $username = getenv("DB_USER");
-    $password = getenv("DB_PW");
-    $dbName = getenv("DB_NAME");
-    
     try {
-      $conn = new PDO("mysql:host=$servername;dbname=$dbName", $username, $password);
+      header("Content-Type:application/json");
+
+      $secrets = getenv('SECRETS');
+      $configs = json_decode($secrets);
+      $host = $configs->host;
+      $username = $configs->username;
+      $password = $configs->password;
+      $dbName = $configs->dbname;
+
+      $conn = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);
       $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
       
       $stmt = $conn->prepare("SELECT * FROM products");

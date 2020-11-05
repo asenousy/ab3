@@ -4,14 +4,16 @@ require 'vendor/autoload.php';
 header('Content-Type: application/json');
 
 $YOUR_DOMAIN = getenv('DOMAIN');
-$servername = getenv("DB_HOST");
-$username = getenv("DB_USER");
-$password = getenv("DB_PW");
-$dbName = getenv("DB_NAME");
+$secrets = getenv('SECRETS');
+$configs = json_decode($secrets);
+$host = $configs->host;
+$username = $configs->username;
+$password = $configs->password;
+$dbName = $configs->dbname;
 
 $id = $_GET['id'];
 
-$conn = new PDO("mysql:host=$servername;dbname=$dbName", $username, $password);
+$conn = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);
 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $stmt = $conn->prepare("SELECT * FROM products where productId=$id");
