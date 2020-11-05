@@ -67,17 +67,17 @@ export class PipelineStack extends Stack {
     });
     preProdStage.addActions(
       new ShellScriptAction({
-        actionName: "Integration Testing",
+        actionName: "IntegrationTesting",
         commands: ["curl -Ssf $URL/info.php"],
         useOutputs: {
           URL: pipeline.stackOutput(preProd.loadBalancerAddress),
         },
       })
     );
-    const prod = new InfrastructureStage(this, "PreProd", {
+    const prod = new InfrastructureStage(this, "Prod", {
       env: { account: "325003598244", region: "us-east-1" },
     });
-    const prodStage = pipeline.addApplicationStage(preProd, {
+    const prodStage = pipeline.addApplicationStage(prod, {
       manualApprovals: true,
     });
   }
