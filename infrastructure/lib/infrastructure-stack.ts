@@ -1,5 +1,5 @@
-import { Stack, StackProps, Construct, SecretValue } from "@aws-cdk/core";
-import { Vpc, SubnetType, UserData } from "@aws-cdk/aws-ec2";
+import { Stack, StackProps, Construct } from "@aws-cdk/core";
+import { Vpc } from "@aws-cdk/aws-ec2";
 import {
   Cluster,
   ContainerImage,
@@ -11,23 +11,18 @@ import { ApplicationLoadBalancedFargateService } from "@aws-cdk/aws-ecs-patterns
 import {
   Dashboard,
   GraphWidget,
+  TextWidget,
   LogQueryVisualizationType,
   LogQueryWidget,
-  SingleValueWidget,
 } from "@aws-cdk/aws-cloudwatch";
-import {
-  Credentials,
-  DatabaseCluster,
-  DatabaseClusterEngine,
-  AuroraMysqlEngineVersion,
-  ServerlessCluster,
-} from "@aws-cdk/aws-rds";
+import { DatabaseClusterEngine, ServerlessCluster } from "@aws-cdk/aws-rds";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 import {
   AwsCustomResource,
   AwsCustomResourcePolicy,
   PhysicalResourceId,
 } from "@aws-cdk/custom-resources";
+import { BucketDeployment, Source } from "@aws-cdk/aws-s3-deployment";
 
 export class InfrastructureStack extends Stack {
   public readonly loadBalancer: any;
@@ -39,34 +34,17 @@ export class InfrastructureStack extends Stack {
 
     ////////// CLOUDFRONT //////////////
 
-    // new CloudFrontToS3(this as any, "my-cloudfront-s3", {});
+    const cloudFront = new CloudFrontToS3(this, "my-cloudfront-s3", {});
 
-    ///////////// SECRESTS ///////////
-
-    // const credentials = Credentials.fromUsername("admin", {
-    //   password: new SecretValue("awesomebuilder") as any,
-    // });
+    new BucketDeployment(this, "DeployS3Images", {
+      sources: [Source.asset("./static")],
+      destinationBucket: cloudFront.s3Bucket!,
+      destinationKeyPrefix: "static",
+    });
+    const staticDomain =
+      cloudFront.cloudFrontWebDistribution.distributionDomainName + "/static";
 
     ////////// DB ////////////
-
-    // const mySecret = secretsmanager.Secret.fromSecretName(
-    //   this,
-    //   "DBSecret",
-    //   "myDBLoginInfo"
-    // );
-
-    // const db = new DatabaseCluster(this, "MyDatabase", {
-    //   engine: DatabaseClusterEngine.auroraMysql({
-    //     version: AuroraMysqlEngineVersion.VER_2_08_1,
-    //   }),
-    //   defaultDatabaseName: "ab3",
-    //   instanceProps: {
-    //     vpcSubnets: {
-    //       subnetType: SubnetType.PRIVATE,
-    //     },
-    //     vpc,
-    //   },
-    // });
 
     const db = new ServerlessCluster(this, "MyDatabase", {
       engine: DatabaseClusterEngine.AURORA_MYSQL,
@@ -75,23 +53,44 @@ export class InfrastructureStack extends Stack {
       vpc,
     });
 
-    const prepopulate = new AwsCustomResource(this, "Prepopulate", {
+    const createTable = new AwsCustomResource(this, "CreateTable", {
       onCreate: {
         service: "RDSDataService",
-        action: "ExecuteStatement",
+        action: "executeStatement",
         parameters: {
           resourceArn: db.clusterArn,
-          secetArn: db.secret?.secretArn,
+          secretArn: db.secret?.secretArn,
           database: "ecommerce",
           sql:
-            "CREATE TABLE products ( productId int, name varchar(255), image varchar(255), price decimal(5, 2) ); INSERT INTO products ( productId, name, image, price ) VALUES ( 1, 'hat', 'https://via.placeholder.com/150', 12.54);",
+            "CREATE TABLE products ( productId int, name varchar(255), image varchar(255), price decimal(5, 2) );",
         },
-        physicalResourceId: PhysicalResourceId.fromResponse("RequestId"),
+        physicalResourceId: PhysicalResourceId.of(Date.now().toString()),
       },
       policy: AwsCustomResourcePolicy.fromSdkCalls({
         resources: AwsCustomResourcePolicy.ANY_RESOURCE,
       }),
     });
+    db.secret?.grantRead(createTable);
+
+    const insertTable = new AwsCustomResource(this, "InsertTable", {
+      onCreate: {
+        service: "RDSDataService",
+        action: "executeStatement",
+        parameters: {
+          resourceArn: db.clusterArn,
+          secretArn: db.secret?.secretArn,
+          database: "ecommerce",
+          sql: `INSERT INTO products VALUES ( 1, 'hat', 'https://${staticDomain}/hat.jpeg', 12.55), ( 2, 'shoe', 'https://${staticDomain}/shoe.jpg', 19.85);`,
+        },
+        physicalResourceId: PhysicalResourceId.of(Date.now().toString()),
+      },
+      policy: AwsCustomResourcePolicy.fromSdkCalls({
+        resources: AwsCustomResourcePolicy.ANY_RESOURCE,
+      }),
+    });
+    db.secret?.grantRead(insertTable);
+
+    insertTable.node.addDependency(createTable);
 
     ////////// ECS ////////////
 
@@ -123,34 +122,44 @@ export class InfrastructureStack extends Stack {
     const phpContainer = taskDefinition.addContainer("ab-php", {
       image: ContainerImage.fromAsset(__dirname + "/../../php-fpm"),
       secrets: {
-        DB_PW: Secret.fromSecretsManager(db.secret!),
+        SECRETS: Secret.fromSecretsManager(db.secret!),
       },
       environment: {
-        DB_HOST: db.clusterEndpoint.hostname,
-        DB_NAME: "ab3",
-        DB_USER: "admin",
         DOMAIN: "http://" + fargateService.loadBalancer.loadBalancerDnsName,
       },
       logging: PHPLogDriver,
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
 
-    db.connections.allowDefaultPortFrom(fargateService.cluster.connections);
+    // db.connections.allowDefaultPortFrom(fargateService.cluster.connections);
+    // db.connections.allowDefaultPortTo(fargateService.cluster.connections);
+    db.connections.allowDefaultPortFromAnyIpv4();
 
     /////////////////// DashBoard /////////////////////
 
     const dashboard = new Dashboard(this, "MyDashboard");
     dashboard.addWidgets(
+      new TextWidget({
+        markdown:
+          "# Load Balancer\nmetrics to monitor load balancer metrics:\n* Amount of incoming requests\n* Latency with an alarm if max accepted latency exceeded.",
+        width: 6,
+        height: 6,
+      }),
       new GraphWidget({
-        title: "Incoming Requests",
-        width: 10,
+        title: "Requests",
+        width: 9,
         left: [fargateService.loadBalancer.metricRequestCount()],
+      }),
+      new GraphWidget({
+        title: "Latency",
+        width: 9,
+        left: [fargateService.loadBalancer.metricTargetResponseTime()],
       })
     );
     dashboard.addWidgets(
       new LogQueryWidget({
         title: "NGINX Logs",
-        width: 20,
+        width: 24,
         logGroupNames: [NGINXLogDriver.logGroup?.logGroupName!],
         view: LogQueryVisualizationType.TABLE,
         queryLines: ["fields @timestamp, @message"],
@@ -159,7 +168,7 @@ export class InfrastructureStack extends Stack {
     dashboard.addWidgets(
       new LogQueryWidget({
         title: "PHP Logs",
-        width: 20,
+        width: 24,
         logGroupNames: [PHPLogDriver.logGroup?.logGroupName!],
         view: LogQueryVisualizationType.TABLE,
         queryLines: ["fields @timestamp, @message"],

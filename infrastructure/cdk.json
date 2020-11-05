@@ -5,6 +5,9 @@
     "aws-cdk:enableDiffNoFail": "true",
     "@aws-cdk/core:stackRelativeExports": "true",
     "@aws-cdk/core:newStyleStackSynthesis": "true",
+    "github_alias": "asenousy",
+    "github_repo_name": "ab3",
+    "github_repo_branch": "master",
     "availability-zones:account=325003598244:region=us-east-1": [
       "us-east-1a",
       "us-east-1b",

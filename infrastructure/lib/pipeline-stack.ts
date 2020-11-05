@@ -44,39 +44,41 @@ export class PipelineStack extends Stack {
       sourceAction: new codepipeline_actions.GitHubSourceAction({
         actionName: "GitHub",
         output: sourceArtifact,
+        owner: this.node.tryGetContext("github_alias"),
+        repo: this.node.tryGetContext("github_repo_name"),
+        branch: this.node.tryGetContext("github_repo_branch"),
         oauthToken: SecretValue.secretsManager("GITHUB_TOKEN"),
-        owner: "asenousy",
-        repo: "ab3",
-        branch: "master",
       }),
 
       synthAction: SimpleSynthAction.standardNpmSynth({
         sourceArtifact,
         cloudAssemblyArtifact,
-        subdirectory: "infrastructure",
+        subdirectory: "source/3-landing-page/cdk",
         installCommand: "npm install",
         buildCommand: "npm run build",
       }),
     });
 
-    const infrastructure = new InfrastructureStage(
-      this,
-      "InfrastructureStage",
-      {
-        env: { account: "325003598244", region: "us-east-1" },
-      }
-    );
-    const deployStage = pipeline.addApplicationStage(infrastructure, {
+    const preProd = new InfrastructureStage(this, "PreProd", {
+      env: { account: "325003598244", region: "us-east-1" },
+    });
+    const preProdStage = pipeline.addApplicationStage(preProd, {
       manualApprovals: false,
     });
-    deployStage.addActions(
+    preProdStage.addActions(
       new ShellScriptAction({
-        actionName: "IntegrationTesting",
+        actionName: "Integration Testing",
         commands: ["curl -Ssf $URL/info.php"],
         useOutputs: {
-          URL: pipeline.stackOutput(infrastructure.loadBalancerAddress),
+          URL: pipeline.stackOutput(preProd.loadBalancerAddress),
         },
       })
     );
+    const prod = new InfrastructureStage(this, "PreProd", {
+      env: { account: "325003598244", region: "us-east-1" },
+    });
+    const prodStage = pipeline.addApplicationStage(preProd, {
+      manualApprovals: true,
+    });
   }
 }
