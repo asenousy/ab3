@@ -15,8 +15,10 @@ import {
 import * as codepipeline from "@aws-cdk/aws-codepipeline";
 import * as codepipeline_actions from "@aws-cdk/aws-codepipeline-actions";
 import { InfrastructureStack } from "./infrastructure-stack";
+import { config, SharedIniFileCredentials, Organizations } from "aws-sdk";
+import { PolicyStatement } from "@aws-cdk/aws-iam";
 
-class InfrastructureStage extends Stage {
+export class InfrastructureStage extends Stage {
   public readonly loadBalancerAddress: CfnOutput;
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
@@ -54,32 +56,128 @@ export class PipelineStack extends Stack {
       synthAction: SimpleSynthAction.standardNpmSynth({
         sourceArtifact,
         cloudAssemblyArtifact,
-        subdirectory: "infrastructure",
+        subdirectory: "cdk",
         installCommand: "npm install",
         buildCommand: "npm run build",
+        rolePolicyStatements: [
+          new PolicyStatement({
+            actions: ["organizations:ListAccounts"],
+            resources: ["*"],
+          }),
+        ],
       }),
     });
 
-    const preProd = new InfrastructureStage(this, "PreProd", {
-      env: { account: "325003598244", region: "us-east-1" },
-    });
-    const preProdStage = pipeline.addApplicationStage(preProd, {
-      manualApprovals: false,
-    });
-    preProdStage.addActions(
-      new ShellScriptAction({
-        actionName: "IntegrationTesting",
-        commands: ["curl -Ssf $URL/info.php"],
-        useOutputs: {
-          URL: pipeline.stackOutput(preProd.loadBalancerAddress),
-        },
+    const AWS_PROFILE = "cicd";
+    if (!process.env.CODEBUILD_BUILD_ID) {
+      config.credentials = new SharedIniFileCredentials({
+        profile: AWS_PROFILE,
+      });
+    }
+
+    const orgClient = new Organizations({ region: "us-east-1" });
+    orgClient
+      .listAccounts()
+      .promise()
+      .then((results) => {
+        let stagesDetails = [];
+        if (results.Accounts) {
+          for (const account of results.Accounts) {
+            switch (account.Name) {
+              case "WorkloadA-Beta": {
+                stagesDetails.push({
+                  name: account.Name,
+                  accountId: account.Id,
+                  order: 1,
+                });
+                break;
+              }
+              case "WorkloadA-Prod": {
+                stagesDetails.push({
+                  name: account.Name,
+                  accountId: account.Id,
+                  order: 2,
+                });
+                break;
+              }
+              default: {
+                console.log(`Ignoring stage ${account.Name}`);
+                break;
+              }
+            }
+          }
+        }
+        stagesDetails.sort((a, b) => (a.order > b.order ? 1 : -1));
+        for (let stageDetailsIndex in stagesDetails) {
+          let stageDetails = stagesDetails[stageDetailsIndex];
+          const infraStage = new InfrastructureStage(this, stageDetails.name, {
+            env: { account: stageDetails.accountId },
+          });
+          const applicationStage = pipeline.addApplicationStage(infraStage, {
+            manualApprovals: stageDetails.name === "WorkloadA-Prod",
+          });
+          applicationStage.addActions(
+            new ShellScriptAction({
+              actionName: "IntegrationTesting",
+              commands: ["curl -Ssf $URL/info.php"],
+              useOutputs: {
+                URL: pipeline.stackOutput(infraStage.loadBalancerAddress),
+              },
+            })
+          );
+        }
       })
-    );
-    const prod = new InfrastructureStage(this, "Prod", {
-      env: { account: "325003598244", region: "us-east-1" },
-    });
-    const prodStage = pipeline.addApplicationStage(prod, {
-      manualApprovals: true,
-    });
+      .catch((error) => {
+        switch (error.code) {
+          case "CredentialsError": {
+            console.error(
+              "\x1b[31m",
+              `Failed to get credentials for "${AWS_PROFILE}" profile. Make sure to run "aws configure sso --profile ${AWS_PROFILE} && aws sso login --profile ${AWS_PROFILE}"\n\n`
+            );
+            break;
+          }
+          case "ExpiredTokenException": {
+            console.error(
+              "\x1b[31m",
+              `Token expired, run "aws sso login --profile ${AWS_PROFILE}"\n\n`
+            );
+            break;
+          }
+          case "AccessDeniedException": {
+            console.error(
+              "\x1b[31m",
+              `Unable to call the AWS Organizations ListAccounts API. Make sure to add a PolicyStatement with the organizations:ListAccounts action to your synth action`
+            );
+            break;
+          }
+          default: {
+            console.error(error.message);
+          }
+        }
+        //force CDK to fail in case of an unknown exception
+        process.exit(1);
+      });
+
+    // const preProd = new InfrastructureStage(this, "PreProd", {
+    //   env: { account: "325003598244", region: "us-east-1" },
+    // });
+    // const preProdStage = pipeline.addApplicationStage(preProd, {
+    //   manualApprovals: false,
+    // });
+    // preProdStage.addActions(
+    //   new ShellScriptAction({
+    //     actionName: "IntegrationTesting",
+    //     commands: ["curl -Ssf $URL/info.php"],
+    //     useOutputs: {
+    //       URL: pipeline.stackOutput(preProd.loadBalancerAddress),
+    //     },
+    //   })
+    // );
+    // const prod = new InfrastructureStage(this, "Prod", {
+    //   env: { account: "325003598244", region: "us-east-1" },
+    // });
+    // const prodStage = pipeline.addApplicationStage(prod, {
+    //   manualApprovals: true,
+    // });
   }
 }

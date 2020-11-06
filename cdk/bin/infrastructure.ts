@@ -5,10 +5,8 @@ import { InfrastructureStack } from "../lib/infrastructure-stack";
 import { PipelineStack } from "../lib/pipeline-stack";
 
 const app = new cdk.App();
+// Use for direct deploy to an environment without pipeline
 // new InfrastructureStack(app, "InfrastructureStack");
-new PipelineStack(app, "PipelineStack", {
-  env: {
-    region: "us-east-1",
-  },
-});
-// new PipelineStack(app, "PipelineStack");
+// Use to deploy the pipeline stack
+new PipelineStack(app, "PipelineStack");
+// new PipelineStack(app, "PipelineStack", { env: { region: "us-east-1" } });
