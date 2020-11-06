@@ -56,7 +56,7 @@ export class PipelineStack extends Stack {
       synthAction: SimpleSynthAction.standardNpmSynth({
         sourceArtifact,
         cloudAssemblyArtifact,
-        subdirectory: "cdk",
+        subdirectory: "source/3-landing-page-cicd/cdk",
         installCommand: "npm install",
         buildCommand: "npm run build",
         rolePolicyStatements: [
@@ -84,7 +84,7 @@ export class PipelineStack extends Stack {
         if (results.Accounts) {
           for (const account of results.Accounts) {
             switch (account.Name) {
-              case "WorkloadA-Beta": {
+              case "Staging": {
                 stagesDetails.push({
                   name: account.Name,
                   accountId: account.Id,
@@ -92,7 +92,7 @@ export class PipelineStack extends Stack {
                 });
                 break;
               }
-              case "WorkloadA-Prod": {
+              case "Prod": {
                 stagesDetails.push({
                   name: account.Name,
                   accountId: account.Id,
@@ -114,7 +114,7 @@ export class PipelineStack extends Stack {
             env: { account: stageDetails.accountId },
           });
           const applicationStage = pipeline.addApplicationStage(infraStage, {
-            manualApprovals: stageDetails.name === "WorkloadA-Prod",
+            manualApprovals: stageDetails.name === "Prod",
           });
           applicationStage.addActions(
             new ShellScriptAction({
@@ -157,27 +157,5 @@ export class PipelineStack extends Stack {
         //force CDK to fail in case of an unknown exception
         process.exit(1);
       });
-
-    // const preProd = new InfrastructureStage(this, "PreProd", {
-    //   env: { account: "325003598244", region: "us-east-1" },
-    // });
-    // const preProdStage = pipeline.addApplicationStage(preProd, {
-    //   manualApprovals: false,
-    // });
-    // preProdStage.addActions(
-    //   new ShellScriptAction({
-    //     actionName: "IntegrationTesting",
-    //     commands: ["curl -Ssf $URL/info.php"],
-    //     useOutputs: {
-    //       URL: pipeline.stackOutput(preProd.loadBalancerAddress),
-    //     },
-    //   })
-    // );
-    // const prod = new InfrastructureStage(this, "Prod", {
-    //   env: { account: "325003598244", region: "us-east-1" },
-    // });
-    // const prodStage = pipeline.addApplicationStage(prod, {
-    //   manualApprovals: true,
-    // });
   }
 }

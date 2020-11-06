@@ -36,6 +36,7 @@ export class InfrastructureStack extends Stack {
 
     const cloudFront = new CloudFrontToS3(this, "my-cloudfront-s3", {});
 
+    // prepopulate bucket with a few images
     new BucketDeployment(this, "DeployS3Images", {
       sources: [Source.asset("./static")],
       destinationBucket: cloudFront.s3Bucket!,
@@ -44,7 +45,7 @@ export class InfrastructureStack extends Stack {
     const staticDomain =
       cloudFront.cloudFrontWebDistribution.distributionDomainName + "/static";
 
-    ////////// DB ////////////
+    ////////// Database ////////////
 
     const db = new ServerlessCluster(this, "MyDatabase", {
       engine: DatabaseClusterEngine.AURORA_MYSQL,
@@ -53,6 +54,7 @@ export class InfrastructureStack extends Stack {
       vpc,
     });
 
+    // prepopulate the Database with a few products
     const createTable = new AwsCustomResource(this, "CreateTable", {
       onCreate: {
         service: "RDSDataService",
@@ -131,11 +133,9 @@ export class InfrastructureStack extends Stack {
     });
     phpContainer.addPortMappings({ containerPort: 9000 });
 
-    // db.connections.allowDefaultPortFrom(fargateService.cluster.connections);
-    // db.connections.allowDefaultPortTo(fargateService.cluster.connections);
     db.connections.allowDefaultPortFromAnyIpv4();
 
-    /////////////////// DashBoard /////////////////////
+    /////////////////// CloudWatch DashBoard /////////////////////
 
     const dashboard = new Dashboard(this, "MyDashboard");
     dashboard.addWidgets(
