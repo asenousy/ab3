@@ -22,7 +22,8 @@ class InfrastructureStage extends Stage {
     super(scope, id, props);
     const { loadBalancer } = new InfrastructureStack(
       this,
-      "InfrastructureStack"
+      "InfrastructureStack",
+      props
     );
     this.loadBalancerAddress = new CfnOutput(loadBalancer, "LbAddress", {
       value: `http://${loadBalancer.loadBalancerDnsName}/`,

@@ -2,10 +2,10 @@
 
 This demonstrate an example of CDK being used for SDLC, what the CDK App builds:
 
-1. CICD pipeline
-2. Ecommerce App Infrastructure
+1. CICD Pipeline Stack
+2. Ecommerce App Infrastructure Stack
 
-## CICD Pipeline
+## CICD Pipeline Stack
 
 The pipeline created consists of several stages:
 
@@ -13,7 +13,7 @@ The pipeline created consists of several stages:
 2. building the code
 3. deployment stage: deploying the Ecommerce Infrastructure using CDK along with deployment of App
 
-## Ecommerce App
+## Ecommerce App Stack
 
 - Cloud Front Distribution for S3 Bucket storing image assets
 - Aurora Serverless with MySQL Engine for products details
@@ -22,11 +22,12 @@ The pipeline created consists of several stages:
 
 ## Steps
 
+1. fork the repository on your Github account by clicking here
 1. fill your AWS credentials and github details in cdk.json
-2. npm install
-3. npm run build - to transpile typescript
-4. npm run synth - to create cloudFormation template
-5. npm run deploy - to deploy
+1. npm install
+1. npm run build - to transpile typescript
+1. npm run synth - to create cloudFormation template
+1. npm run deploy - to deploy
 
 ### Note:
 
