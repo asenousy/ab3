@@ -12,7 +12,7 @@
 
 <body>
   <main>
-    <h1>Payment Successful</h1>
+    <h1>Payment Successfull</h1>
     <h3>Thanks for your order!</h3>
         <h1>
             <a href="/index.php">Continue Shopping</a>
